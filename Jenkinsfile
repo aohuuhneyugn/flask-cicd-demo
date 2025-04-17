@@ -4,14 +4,14 @@ pipeline {
     stages {
         stage('Clone source') {
             steps {
-                git 'https://github.com/tenban/flask-cicd-demo.git'
+                git 'https://github.com/aohuuhneyugn/flask-cicd-demo.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("yourdockerhubusername/flask-cicd")
+                    dockerImage = docker.build("aohuuhneyugn/flask-cicd")
                 }
             }
         }

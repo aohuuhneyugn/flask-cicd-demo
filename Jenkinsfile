@@ -1,12 +1,11 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Clone source') {
-            steps {
-                git 'https://github.com/aohuuhneyugn/flask-cicd-demo.git'
-            }
-        }
+    stage('Clone source') {
+    steps {
+        git url: 'https://github.com/aohuuhneyugn/flask-cicd-demo.git', branch: 'main'
+    }
+}
 
         stage('Build Docker Image') {
             steps {

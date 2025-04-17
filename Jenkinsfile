@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_HUB_CREDENTIALS = credentials('dockerhub-cred')
+        IMAGE_NAME = 'aohuuhneyugn/flask-cicd-demo'
+    }
+
     stages {
         stage('Clone source') {
             steps {
@@ -10,18 +15,16 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t your-image-name .'
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh """
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push your-image-name
-                    """
-                }
+                sh """
+                    echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin
+                    docker push $IMAGE_NAME
+                """
             }
         }
     }

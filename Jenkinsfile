@@ -1,31 +1,27 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_HUB_CREDENTIALS = credentials('dockerhub-cred')
-        IMAGE_NAME = 'aohuuhneyugn/flask-cicd-demo'
-    }
-
     stages {
-        stage('Clone source') {
+        stage('Clone') {
             steps {
-                git url: 'https://github.com/aohuuhneyugn/flask-cicd-demo.git', branch: 'main'
+                git 'https://github.com/aohuuhneyugn/flask-cicd-demo.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                script {
+                    dockerImage = docker.build("flask-cicd-demo")
+                }
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Run Container') {
             steps {
-                sh """
-                    echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin
-                    docker push $IMAGE_NAME
-                """
+                script {
+                    dockerImage.run("-p 5000:5000")
+                }
             }
         }
-    }
-}
+    } // <-- Đóng stages ở đây
+} // <-- Đóng pipeline ở đây

@@ -2,36 +2,31 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "aohuuhneyugn/flask-cicd-demo"
-        TAG = "latest"
+        DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
+        IMAGE_NAME = 'aohuuhneyugn/flask-cicd-demo'
     }
 
     stages {
-        stage('Clone code') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/aohuuhneyugn/flask-cicd-demo.git'
+                git url: 'https://github.com/aohuuhneyugn/flask-cicd-demo.git', branch: 'main'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t $IMAGE_NAME:$TAG .'
+                    sh 'docker build -t $IMAGE_NAME .'
                 }
             }
         }
 
-        stage('Login DockerHub') {
+        stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                script {
+                    sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
+                    sh "docker push $IMAGE_NAME"
                 }
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                sh 'docker push $IMAGE_NAME:$TAG'
             }
         }
     }

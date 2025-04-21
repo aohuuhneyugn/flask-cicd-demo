@@ -1,38 +1,33 @@
 pipeline {
     agent any
-    environment {
-        IMAGE_NAME = 'aohuuhneyugn/flask-cicd-demo'
-    }
+
     stages {
-        stage('Checkout') {
+        stage('Clone Repo') {
             steps {
                 git 'https://github.com/aohuuhneyugn/flask-cicd-demo.git'
             }
         }
 
+        stage('Unit Test') {
+            steps {
+                sh 'pip install -r requirements.txt'
+                sh 'pytest test_app.py'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                sh 'docker build -t flask-cicd-demo .'
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-token', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                    sh '''
-                        echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
-                        docker push $IMAGE_NAME
-                    '''
+                withCredentials([string(credentialsId: 'dockerhub-token', variable: 'DOCKERHUB_TOKEN')]) {
+                    sh 'echo "$DOCKERHUB_TOKEN" | docker login -u aohuuhneyugn --password-stdin'
+                    sh 'docker tag flask-cicd-demo aohuuhneyugn/flask-cicd-demo:latest'
+                    sh 'docker push aohuuhneyugn/flask-cicd-demo:latest'
                 }
-            }
-        }
-
-        stage('Deploy Container') {
-            steps {
-                sh '''
-                    docker rm -f flask-app || true
-                    docker run -d --name flask-app -p 5000:5000 $IMAGE_NAME
-                '''
             }
         }
     }

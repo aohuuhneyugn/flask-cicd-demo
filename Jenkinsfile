@@ -1,10 +1,8 @@
 pipeline {
     agent any
-
     environment {
-        IMAGE_NAME = "aohuuhneyugn/flask-cicd-demo"
+        IMAGE_NAME = 'aohuuhneyugn/flask-cicd-demo'
     }
-
     stages {
         stage('Checkout') {
             steps {
@@ -22,19 +20,18 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-token', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
                     sh '''
-                        echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+                        echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
                         docker push $IMAGE_NAME
                     '''
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy Container') {
             steps {
                 sh '''
-                    docker rm -f flask-cicd-demo || true
-                    docker pull $IMAGE_NAME
-                    docker run -d -p 5000:5000 --name flask-cicd-demo $IMAGE_NAME
+                    docker rm -f flask-app || true
+                    docker run -d --name flask-app -p 5000:5000 $IMAGE_NAME
                 '''
             }
         }

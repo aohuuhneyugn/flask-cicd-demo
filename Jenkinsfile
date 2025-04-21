@@ -2,32 +2,43 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
         IMAGE_NAME = 'aohuuhneyugn/flask-cicd-demo'
+        IMAGE_TAG = 'latest'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Clone code') {
             steps {
-                git url: 'https://github.com/aohuuhneyugn/flask-cicd-demo.git', branch: 'main'
+                echo 'Cloning repository...'
+                // Nếu dùng multibranch thì Jenkins đã tự clone rồi, không cần lặp lại
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh 'docker build -t $IMAGE_NAME .'
-                }
+                echo 'Building Docker image...'
+                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Login DockerHub & Push') {
             steps {
-                script {
-                    sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
-                    sh "docker push $IMAGE_NAME"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-token', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                    sh """
+                        echo \$DOCKERHUB_PASSWORD | docker login -u \$DOCKERHUB_USERNAME --password-stdin
+                        docker push $IMAGE_NAME:$IMAGE_TAG
+                    """
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Build & push Docker image thành công!'
+        }
+        failure {
+            echo '❌ Build thất bại. Kiểm tra lại các bước.'
         }
     }
 }
